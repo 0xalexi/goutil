@@ -182,13 +182,6 @@ func (m *PersistentStringMap) ReadOk(k string) (v interface{}, ok bool) {
 	defer db.Close()
 	if err := db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(k))
-		// if err == badger.ErrKeyNotFound {
-		// 	log.LogWarn(k, "not found")
-		// 	return err
-		// } else if err != nil {
-		// 	log.LogError(err)
-		// 	return err
-		// }
 		if err != nil {
 			log.LogError(err)
 			return err

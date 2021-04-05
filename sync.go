@@ -64,14 +64,14 @@ func (m *ConcurrentIdIdxMap) Len() int {
 	return len(m.Data)
 }
 
-func (m ConcurrentIdIdxMap) ReadOk(id uint64) (int, bool) {
+func (m *ConcurrentIdIdxMap) ReadOk(id uint64) (int, bool) {
 	m.Mu.RLock()
 	defer m.Mu.RUnlock()
 	v, ok := m.Data[id]
 	return v, ok
 }
 
-func (m ConcurrentIdIdxMap) Read(id uint64) int {
+func (m *ConcurrentIdIdxMap) Read(id uint64) int {
 	m.Mu.RLock()
 	defer m.Mu.RUnlock()
 	return m.Data[id]

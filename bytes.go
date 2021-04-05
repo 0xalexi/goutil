@@ -189,18 +189,6 @@ func GenUint32FromString(s string) uint32 {
 	return UnsafeCaseBytesToUInt32(bs)
 }
 
-func getReflectValue(value interface{}) (bool, reflect.Value) {
-	v := reflect.ValueOf(value)
-	if v.Kind() == reflect.Ptr {
-		el := v.Elem()
-		if !el.IsValid() {
-			return false, v
-		}
-		v = reflect.ValueOf(el.Interface())
-	}
-	return true, v
-}
-
 func GetInterfaceSize(value interface{}, isParent bool, log func(...interface{})) (s int64) {
 	var isvalid bool
 	var v reflect.Value

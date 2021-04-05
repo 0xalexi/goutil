@@ -2,8 +2,6 @@ package log
 
 import (
 	"compress/gzip"
-	. "engie/config"
-	"engie/utils/goutil"
 	"errors"
 	"fmt"
 	"io"
@@ -19,6 +17,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/alexi/goutil"
 )
 
 const (
@@ -33,7 +33,7 @@ const (
 var (
 	LogLevel    int
 	LogLock     *sync.Mutex = new(sync.Mutex)
-	LogBasename string      = "engie"
+	LogBasename string      = "app"
 	LogLimit    int64       = 1 << 25
 	MaxLogFiles int         = int(math.MaxInt64)
 	logGzNum    int
@@ -50,6 +50,28 @@ var (
 
 	LogProfile = false
 )
+
+func Run() {
+	runProfile()
+	runRotator()
+	err := createLog()
+	outlogStat, err := outlog.Stat()
+	if err != nil {
+		panic(err)
+	}
+	logCount = outlogStat.Size()
+	logGzNum = 1
+	for {
+		_, err = os.Stat(fmt.Sprintf(LogBasename+".log.%d.gz", logGzNum))
+		if os.IsNotExist(err) {
+			break
+		} else if err != nil {
+			panic(err)
+		} else {
+			logGzNum++
+		}
+	}
+}
 
 func getLevelStr(level int) string {
 	// Make sure to update with new log levels
@@ -92,18 +114,6 @@ func ParseLogLevel(lvl string) int {
 
 func ResetLog() {
 	outlog = nil
-}
-
-func InitLog() {
-	ConfigKeys["log"] = map[string]interface{}{
-		"name":         &LogBasename,
-		"level":        &LogLevel,
-		"limit":        &LogLimit,
-		"queueLogRate": &QueueLogRate,
-		"max_files":    &MaxLogFiles,
-	}
-	ConfigKeys["profile"] = &LogProfile
-
 }
 
 func createLog() (err error) {
@@ -217,28 +227,6 @@ func runProfile() {
 		}
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
-	}
-}
-
-func RunLog() {
-	runProfile()
-	runRotator()
-	err := createLog()
-	outlogStat, err := outlog.Stat()
-	if err != nil {
-		panic(err)
-	}
-	logCount = outlogStat.Size()
-	logGzNum = 1
-	for {
-		_, err = os.Stat(fmt.Sprintf(LogBasename+".log.%d.gz", logGzNum))
-		if os.IsNotExist(err) {
-			break
-		} else if err != nil {
-			panic(err)
-		} else {
-			logGzNum++
-		}
 	}
 }
 
