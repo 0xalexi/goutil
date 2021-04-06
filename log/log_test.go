@@ -25,7 +25,7 @@ func TestLogAutoRotate(t *testing.T) {
 		}
 	}()
 
-	testlog := NewTmbLoggerWithDir(dir, Basename, LOG_DEBUG, 9)
+	testlog := NewLoggerWithDir(dir, Basename, LOG_DEBUG, 9)
 	testlog.SetMaxBackups(mbackups)
 	for i := 0; i < nfiles-1; i++ {
 		testlog.LogError(fmt.Sprintf("%d_3456789", i))
@@ -61,7 +61,7 @@ func TestLogRotate(t *testing.T) {
 		}
 	}()
 
-	testlog := NewTmbLoggerWithDir(dir, Basename, LOG_DEBUG, 9)
+	testlog := NewLoggerWithDir(dir, Basename, LOG_DEBUG, 9)
 	for i := 0; i < nfiles-1; i++ {
 		testlog.LogError("123456789")
 	}
