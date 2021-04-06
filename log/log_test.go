@@ -63,7 +63,7 @@ func TestLogRotate(t *testing.T) {
 
 	testlog := NewLoggerWithDir(dir, Basename, LOG_DEBUG, 9)
 	for i := 0; i < nfiles-1; i++ {
-		testlog.LogError("123456789")
+		testlog.Error("123456789")
 	}
 	t.Log("waiting 2s for all logs to gzip...")
 	time.Sleep(2 * time.Second)
