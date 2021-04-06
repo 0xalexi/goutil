@@ -33,7 +33,7 @@ const (
 var (
 	LogLevel    int
 	LogLock     *sync.Mutex = new(sync.Mutex)
-	LogBasename string      = "app"
+	Basename    string      = "app"
 	LogLimit    int64       = 1 << 25
 	MaxLogFiles int         = int(math.MaxInt64)
 	logGzNum    int
@@ -62,7 +62,7 @@ func Run() {
 	logCount = outlogStat.Size()
 	logGzNum = 1
 	for {
-		_, err = os.Stat(fmt.Sprintf(LogBasename+".log.%d.gz", logGzNum))
+		_, err = os.Stat(fmt.Sprintf(Basename+".log.%d.gz", logGzNum))
 		if os.IsNotExist(err) {
 			break
 		} else if err != nil {
@@ -93,6 +93,10 @@ func getLevelStr(level int) string {
 	}
 }
 
+func GetLevelString(level int) string {
+	return getLevelStr(level)
+}
+
 func ParseLogLevel(lvl string) int {
 	switch lvl {
 	case "fatal", "FATAL":
@@ -117,7 +121,7 @@ func ResetLog() {
 }
 
 func createLog() (err error) {
-	outlog, err = os.OpenFile(LogBasename+".log", os.O_CREATE|os.O_APPEND|os.O_RDWR|os.O_TRUNC, 0777)
+	outlog, err = os.OpenFile(Basename+".log", os.O_CREATE|os.O_APPEND|os.O_RDWR|os.O_TRUNC, 0777)
 	redirectStderr(outlog)
 	return err
 }
@@ -240,7 +244,7 @@ func ShouldLog(level int) bool {
 func runRotator() {
 	go func() {
 		for ngzip := range rotateQueue {
-			n, err := rotateLogFiles(LogBasename+".log", MaxLogFiles, ngzip)
+			n, err := rotateLogFiles(Basename+".log", MaxLogFiles, ngzip)
 			if err == nil {
 				// remove num rotated from logger gznum
 				LogLock.Lock()
@@ -294,9 +298,9 @@ func doLog(level int, args ...interface{}) {
 	}
 	logCount += int64(n)
 	if logCount >= LogLimit {
-		newf := fmt.Sprintf(LogBasename+".log.%d", logGzNum)
+		newf := fmt.Sprintf(Basename+".log.%d", logGzNum)
 		outlog.Close()
-		err := os.Rename(LogBasename+".log", newf)
+		err := os.Rename(Basename+".log", newf)
 		createLog()
 		logCount = 0
 		if err == nil {

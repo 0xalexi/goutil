@@ -10,7 +10,7 @@ import (
 )
 
 func TestLogAutoRotate(t *testing.T) {
-	LogBasename = "logtest"
+	Basename = "logtest"
 	LogLimit = 9
 	nfiles := 6
 	mbackups := 3
@@ -25,7 +25,7 @@ func TestLogAutoRotate(t *testing.T) {
 		}
 	}()
 
-	testlog := NewTmbLoggerWithDir(dir, LogBasename, LOG_DEBUG, 9)
+	testlog := NewTmbLoggerWithDir(dir, Basename, LOG_DEBUG, 9)
 	testlog.SetMaxBackups(mbackups)
 	for i := 0; i < nfiles-1; i++ {
 		testlog.LogError(fmt.Sprintf("%d_3456789", i))
@@ -46,7 +46,7 @@ func TestLogAutoRotate(t *testing.T) {
 }
 
 func TestLogRotate(t *testing.T) {
-	LogBasename = "logtest"
+	Basename = "logtest"
 	LogLimit = 9
 	nfiles := 6
 	mbackups := 3
@@ -61,7 +61,7 @@ func TestLogRotate(t *testing.T) {
 		}
 	}()
 
-	testlog := NewTmbLoggerWithDir(dir, LogBasename, LOG_DEBUG, 9)
+	testlog := NewTmbLoggerWithDir(dir, Basename, LOG_DEBUG, 9)
 	for i := 0; i < nfiles-1; i++ {
 		testlog.LogError("123456789")
 	}
@@ -69,8 +69,8 @@ func TestLogRotate(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	// create much larger file to simulate past runs
-	os.Create(filepath.Join(dir, LogBasename+".log.100.gz"))
-	os.Create(filepath.Join(dir, LogBasename+".log.5"))
+	os.Create(filepath.Join(dir, Basename+".log.100.gz"))
+	os.Create(filepath.Join(dir, Basename+".log.5"))
 
 	// check log file count correct
 	t.Log("Checking files before rotation...")
@@ -87,7 +87,7 @@ func TestLogRotate(t *testing.T) {
 
 	// do rotation
 	t.Log("rotating files...")
-	if _, err := rotateLogFiles(filepath.Join(dir, LogBasename+".log"), mbackups, nfiles-1); err != nil {
+	if _, err := rotateLogFiles(filepath.Join(dir, Basename+".log"), mbackups, nfiles-1); err != nil {
 		t.Error(err)
 	}
 

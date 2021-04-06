@@ -14,7 +14,7 @@ const (
 	defaultMaxBackups int = 500
 )
 
-type TmbLogger struct {
+type Logger struct {
 	dir           string
 	basename      string
 	level         int
@@ -31,12 +31,12 @@ type TmbLogger struct {
 	rotateQueue   chan int
 }
 
-func NewTmbLoggerWithDir(dir, name string, level int, byteLimit int64) *TmbLogger {
+func NewLoggerWithDir(dir, name string, level int, byteLimit int64) *Logger {
 	if !strings.HasSuffix(name, ".log") {
 		name += ".log"
 	}
 
-	l := &TmbLogger{
+	l := &Logger{
 		dir:           dir,
 		basename:      name,
 		level:         level,
@@ -54,33 +54,33 @@ func NewTmbLoggerWithDir(dir, name string, level int, byteLimit int64) *TmbLogge
 	return l
 }
 
-func NewTmbLogger(name string, level int, byteLimit int64) *TmbLogger {
-	return NewTmbLoggerWithDir(".", name, level, byteLimit)
+func New(name string, level int) *Logger {
+	return NewLoggerWithDir(".", name, level, 1<<25)
 }
 
-func (l *TmbLogger) SetLogLevel(level int) {
+func (l *Logger) SetLogLevel(level int) {
 	l.level = level
 }
 
-func (l *TmbLogger) SetNoPrefix(disabled bool) {
+func (l *Logger) SetNoPrefix(disabled bool) {
 	l.noPrefix = disabled
 }
 
-func (l *TmbLogger) SetMaxBackups(maxbackups int) {
+func (l *Logger) SetMaxBackups(maxbackups int) {
 	l.maxbackups = maxbackups
 }
 
-func (l *TmbLogger) SetLogToStdout(logToStdout bool) {
+func (l *Logger) SetLogToStdout(logToStdout bool) {
 	l.logToStdout = logToStdout
 }
 
-func (l *TmbLogger) createLog() error {
+func (l *Logger) createLog() error {
 	outlog, err := os.OpenFile(filepath.Join(l.dir, l.basename), os.O_CREATE|os.O_APPEND|os.O_RDWR|os.O_TRUNC, 0777)
 	l.outlog = outlog
 	return err
 }
 
-func (l *TmbLogger) initStats() {
+func (l *Logger) initStats() {
 	outlogStat, err := l.outlog.Stat()
 	if err != nil {
 		panic(err)
@@ -99,7 +99,7 @@ func (l *TmbLogger) initStats() {
 	}
 }
 
-func (l *TmbLogger) runRotator() {
+func (l *Logger) runRotator() {
 	go func() {
 		for ngzip := range l.rotateQueue {
 			n, err := rotateLogFiles(filepath.Join(l.dir, l.basename), l.maxbackups, ngzip)
@@ -114,7 +114,7 @@ func (l *TmbLogger) runRotator() {
 	}()
 }
 
-func (l *TmbLogger) doLog(level int, args ...interface{}) {
+func (l *Logger) doLog(level int, args ...interface{}) {
 	if l == nil {
 		DoLog(level, args...)
 		return
@@ -185,13 +185,13 @@ func (l *TmbLogger) doLog(level int, args ...interface{}) {
 	}
 }
 
-type TmbLoggerInterface interface {
-	LogFatal(v ...interface{})
-	LogError(v ...interface{})
-	LogWarn(v ...interface{})
-	LogInfo(v ...interface{})
-	LogDebug(v ...interface{})
-	LogTrace(v ...interface{})
+type LoggerInterface interface {
+	Fatal(v ...interface{})
+	Error(v ...interface{})
+	Warn(v ...interface{})
+	Info(v ...interface{})
+	Debug(v ...interface{})
+	Trace(v ...interface{})
 
 	DoLog(level int, v ...interface{})
 	Log(v ...interface{})
@@ -200,47 +200,47 @@ type TmbLoggerInterface interface {
 	Printf(fmts string, v ...interface{})
 }
 
-func (l *TmbLogger) DoLog(level int, v ...interface{}) {
+func (l *Logger) DoLog(level int, v ...interface{}) {
 	l.doLog(level, v...)
 }
 
-func (l *TmbLogger) Log(v ...interface{}) {
+func (l *Logger) Log(v ...interface{}) {
 	l.doLog(l.level, v...)
 }
 
-func (l *TmbLogger) Println(v ...interface{}) {
+func (l *Logger) Println(v ...interface{}) {
 	l.doLog(l.level, v...)
 }
 
-func (l *TmbLogger) Print(v ...interface{}) {
+func (l *Logger) Print(v ...interface{}) {
 	l.doLog(l.level, v...)
 }
 
-func (l *TmbLogger) Printf(fmts string, v ...interface{}) {
+func (l *Logger) Printf(fmts string, v ...interface{}) {
 	l.doLog(l.level, fmt.Sprintf(fmts, v...))
 }
 
-func (l *TmbLogger) LogError(v ...interface{}) {
+func (l *Logger) Error(v ...interface{}) {
 	l.doLog(LOG_ERROR, v...)
 }
 
-func (l *TmbLogger) LogWarn(v ...interface{}) {
+func (l *Logger) Warn(v ...interface{}) {
 	l.doLog(LOG_WARN, v...)
 }
 
-func (l *TmbLogger) LogInfo(v ...interface{}) {
+func (l *Logger) Info(v ...interface{}) {
 	l.doLog(LOG_INFO, v...)
 }
 
-func (l *TmbLogger) LogDebug(v ...interface{}) {
+func (l *Logger) Debug(v ...interface{}) {
 	l.doLog(LOG_DEBUG, v...)
 }
 
-func (l *TmbLogger) LogTrace(v ...interface{}) {
+func (l *Logger) Trace(v ...interface{}) {
 	l.doLog(LOG_TRACE, v...)
 }
 
-func (l *TmbLogger) LogFatal(v ...interface{}) {
+func (l *Logger) Fatal(v ...interface{}) {
 	l.doLog(LOG_FATAL, v...)
 	os.Exit(1)
 }
