@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -243,4 +244,15 @@ func (l *Logger) Trace(v ...interface{}) {
 func (l *Logger) Fatal(v ...interface{}) {
 	l.doLog(LOG_FATAL, v...)
 	os.Exit(1)
+}
+
+func (l *Logger) Panic(v ...interface{}) {
+	panic(fmt.Sprintln(v...))
+}
+
+func (l *Logger) StackTrace() {
+	out := string(debug.Stack())
+	for _, line := range strings.Split(out, "\n") {
+		l.doLog(LOG_ERROR, "Stack trace: ", line)
+	}
 }
