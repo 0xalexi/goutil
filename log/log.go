@@ -49,6 +49,8 @@ var (
 	QueueLogRate = 10 //secs
 
 	LogProfile = false
+
+	DefaultLogger *Logger = nil
 )
 
 func Run() {
@@ -258,6 +260,10 @@ func runRotator() {
 }
 
 func doLog(level int, args ...interface{}) {
+	if DefaultLogger != nil {
+		DefaultLogger._doLog(3, level, args...)
+		return
+	}
 	// Apply LogLevel filter
 	if level > LogLevel {
 		return

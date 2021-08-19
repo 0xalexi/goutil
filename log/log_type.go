@@ -115,7 +115,7 @@ func (l *Logger) runRotator() {
 	}()
 }
 
-func (l *Logger) doLog(level int, args ...interface{}) {
+func (l *Logger) _doLog(stackSize int, level int, args ...interface{}) {
 	if l == nil {
 		DoLog(level, args...)
 		return
@@ -125,7 +125,7 @@ func (l *Logger) doLog(level int, args ...interface{}) {
 	}
 	// Apply prefix args
 	if !l.noPrefix {
-		pc, file, line, ok := runtime.Caller(2) // 0 is doLog, 1 is internal logger.go func, 2 is caller
+		pc, file, line, ok := runtime.Caller(stackSize)
 		file = filepath.Base(file)
 		if ok {
 			f := runtime.FuncForPC(pc)
@@ -184,6 +184,11 @@ func (l *Logger) doLog(level int, args ...interface{}) {
 			}
 		}
 	}
+}
+
+func (l *Logger) doLog(level int, args ...interface{}) {
+	// stackSize: 0 is _doLog, 1 is doLog, 2 is parent logger.go func, 3 is actual caller
+	l._doLog(3, level, args...)
 }
 
 type LoggerInterface interface {
