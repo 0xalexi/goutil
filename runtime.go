@@ -4,27 +4,27 @@ import (
 	"fmt"
 	"runtime"
 
-	sigar "github.com/cloudfoundry/gosigar"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
 type MemStats struct {
-	m      runtime.MemStats
-	sigMem *sigar.Mem
+	m     runtime.MemStats
+	psmem *mem.VirtualMemoryStat
 }
 
 func NewMemStats() *MemStats {
-	return &MemStats{sigMem: new(sigar.Mem)}
+	return &MemStats{}
 }
 
 func (s *MemStats) Read() {
 	runtime.ReadMemStats(&s.m)
-	s.sigMem.Get()
+	s.psmem, _ = mem.VirtualMemory()
 }
 
 func (s *MemStats) String() string {
 	v := fmt.Sprint("mem-acquired:", s.m.Sys, "alloc:", s.m.Alloc, "total-alloc:", s.m.TotalAlloc)
-	if s.sigMem != nil {
-		v += fmt.Sprint(" sig-total:", s.sigMem.Total, "sig-free:", s.sigMem.Free, "sig-used:", float64(s.sigMem.Used), "sig-percent-used:", fmt.Sprintf("%f%%", float64(s.sigMem.Used)/float64(s.sigMem.Total)*100))
+	if s.psmem != nil {
+		v += fmt.Sprint(" sig-total:", s.psmem.Total, "sig-free:", s.psmem.Free, "sig-used:", float64(s.psmem.Used), "sig-percent-used:", s.psmem.UsedPercent)
 	}
 	return v
 }
