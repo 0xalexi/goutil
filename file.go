@@ -75,6 +75,9 @@ func copyFileContents(src, dst string) (err error) {
 		return
 	}
 	defer in.Close()
+	if err = os.MkdirAll(filepath.Dir(dst), 0777); err != nil {
+		return err
+	}
 	out, err := os.Create(dst)
 	if err != nil {
 		return
