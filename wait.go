@@ -2,8 +2,11 @@ package goutil
 
 import (
 	"errors"
+	"math"
 	"time"
 )
+
+var NO_TIMEOUT = time.Duration(math.MaxInt64)
 
 func WaitFor(f func() bool, period, timeout time.Duration) error {
 	if period < 1 {
