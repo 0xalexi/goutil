@@ -67,7 +67,7 @@ func (l *OpTrace) GetOrCreateChild(fname string) (*OpTrace, time.Time) {
 			return c, time.Now()
 		}
 	}
-	return l.AddNewChild(fname), time.Now()
+	return l.addNewChild(fname), time.Now()
 }
 
 func (l *OpTrace) AddChild(child *OpTrace) {
