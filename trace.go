@@ -2,6 +2,7 @@ package goutil
 
 import (
 	"fmt"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -12,10 +13,11 @@ type OpTrace struct {
 	Children []*OpTrace    `json:"children,omitempty"`
 	Count    int64         `json:"count,omitempty"`
 	start    time.Time
+	lock     *sync.RWMutex
 }
 
 func NewOpTrace(fname string) *OpTrace {
-	return &OpTrace{Function: fname, start: time.Now()}
+	return &OpTrace{Function: fname, start: time.Now(), lock: &sync.RWMutex{}}
 }
 
 func ident(lvl int) string {
@@ -49,26 +51,23 @@ func (l OpTrace) String() string {
 }
 
 func (l *OpTrace) AddNewChild(fname string) *OpTrace {
-	child := NewOpTrace(fname)
-	if l != nil {
-		if l.Children == nil {
-			l.Children = []*OpTrace{}
-		}
-		l.Children = append(l.Children, child)
-	}
-	return child
+	l.lock.Lock()
+	defer l.lock.Unlock()
+	return l.addNewChild(fname)
 }
 
-func (l *OpTrace) GetOrCreateChild(fname string) *OpTrace {
+func (l *OpTrace) GetOrCreateChild(fname string) (*OpTrace, time.Time) {
+	l.lock.Lock()
+	defer l.lock.Unlock()
 	if l == nil {
-		return NewOpTrace(fname)
+		return NewOpTrace(fname), time.Now()
 	}
 	for _, c := range l.Children {
 		if c.Function == fname {
-			return c
+			return c, time.Now()
 		}
 	}
-	return l.AddNewChild(fname)
+	return l.AddNewChild(fname), time.Now()
 }
 
 func (l *OpTrace) AddChild(child *OpTrace) {
@@ -118,4 +117,15 @@ func (l *OpTrace) Add(dur time.Duration) *OpTrace {
 
 func (l *OpTrace) AddFrom(start time.Time) *OpTrace {
 	return l.Add(time.Now().Sub(start))
+}
+
+func (l *OpTrace) addNewChild(fname string) *OpTrace {
+	child := NewOpTrace(fname)
+	if l != nil {
+		if l.Children == nil {
+			l.Children = []*OpTrace{}
+		}
+		l.Children = append(l.Children, child)
+	}
+	return child
 }
